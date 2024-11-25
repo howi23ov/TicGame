@@ -47,6 +47,9 @@ fun TicTacToeApp() {
             val gameId = backStackEntry.arguments?.getString("gameId")
             MainScreen(navController, gameModel, gameId)
         }
+        composable("LobbyScreen") {
+            LobbyScreen(navController, gameModel)
+        }
     }
 }
 

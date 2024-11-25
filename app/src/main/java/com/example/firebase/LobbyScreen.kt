@@ -68,34 +68,13 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                                 }
                             }
                         }) {
-                            Text("UPPDATE STATUS")
+                            Text("Challenge")
                         }
                     }
                 )
             }
         }
 
-        if(!AreOnline.value){
-            Text(
-                text = "Waiting for both player to connect......",
-                modifier = Modifier.padding(top = 200.dp, start = 16.dp)
-            )
-        }
-        if(AreOnline.value){
-            Button(
 
-                onClick = {
-
-                },
-
-                modifier = Modifier
-                    .padding(start = 145.dp)
-                    .padding(top = 310.dp)
-
-            ) {
-                Text("StartaSpelet")
-
-            }
-        }
     }
 }
