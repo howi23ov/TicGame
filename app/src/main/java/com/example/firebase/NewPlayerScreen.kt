@@ -29,7 +29,7 @@ fun NewPlayerScreen(navController: NavController, model: GameModel){
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(60.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

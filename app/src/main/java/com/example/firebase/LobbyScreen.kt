@@ -1,9 +1,11 @@
 package com.example.firebase
 
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
@@ -28,22 +30,49 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
     val db = Firebase.firestore
     val playerList = remember { MutableStateFlow<List<Player>>(emptyList()) }
     val coroutineScope = rememberCoroutineScope()
-    var AreOnline = remember { mutableStateOf(false) }
+  //  var AreOnline = remember { mutableStateOf(false) }
 
 
     LaunchedEffect(Unit) {
+        model.listenForChallenges()
         db.collection("players").addSnapshotListener { value, error ->
             if (error == null && value != null) {
                 val players = value.toObjects(Player::class.java)
                 coroutineScope.launch {
                     playerList.emit(players)
-                    AreOnline.value = players.all { it.status == "online" }
+                   // AreOnline.value = players.all { it.status == "online" }
                 }
             }
         }
     }
 
-    val players by playerList.collectAsStateWithLifecycle()
+    val players by playerList.collectAsStateWithLifecycle() // kan va denna som är rr
+    val challenge = model.incomingChallenge.value
+
+    challenge?.let {
+        AlertDialog(
+            onDismissRequest = { model.incomingChallenge.value = null },
+            title = { Text("You have been challenged!") },
+            text = { Text("Player ${it.player1Id} has challenged you to a game.") },
+            confirmButton = {
+                Button(onClick = {
+                    db.collection("games").document(it.gameId).update("gameState", "ongoing")
+                    navController.navigate("MainScreen/${it.gameId}")
+                    model.incomingChallenge.value = null
+                }) {
+                    Text("Accept")
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    db.collection("games").document(it.gameId).delete()
+                    model.incomingChallenge.value = null
+                }) {
+                    Text("Decline")
+                }
+            }
+        )
+    }
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         LazyColumn(modifier = Modifier.padding(innerPadding)) {
@@ -57,15 +86,22 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                     },
                     trailingContent = {
                         Button(onClick = {
-                            val query = db.collection("players").whereEqualTo("playerID", player.playerID)
-                            query.get().addOnSuccessListener { querySnapshot ->
-                                for (documentSnapshot in querySnapshot) {
-                                    if (player.status == "online") {
-                                        documentSnapshot.reference.update("status", "offline")
-                                    } else {
-                                        documentSnapshot.reference.update("status", "online")
+                            val currentPlayerId = model.localPlayerId.value
+                            if (currentPlayerId != null) {
+                                val newGame = Game(
+                                    player1Id = currentPlayerId,
+                                    player2Id = player.playerID,
+                                    gameState = "pending"
+                                )
+
+                                db.collection("games")
+                                    .add(newGame)
+                                    .addOnSuccessListener { documentReference ->
+                                        navController.navigate("MainScreen/${documentReference.id}")
                                     }
-                                }
+                                    .addOnFailureListener { e ->
+                                        Log.e("LobbyScreen", "Error creating game", e)
+                                    }
                             }
                         }) {
                             Text("Challenge")
