@@ -30,6 +30,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
     val db = Firebase.firestore
     val playerList = remember { MutableStateFlow<List<Player>>(emptyList()) }
     val coroutineScope = rememberCoroutineScope()
+
   //  var AreOnline = remember { mutableStateOf(false) }
 
 
@@ -46,18 +47,37 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
         }
     }
 
+
+
     val players by playerList.collectAsStateWithLifecycle() // kan va denna som är rr
     val challenge = model.incomingChallenge.value
+    val playerName = remember { mutableStateOf("") }
 
-    challenge?.let {
+    // för att hämta spelarens namn iställer för att visa just bara ID
+    LaunchedEffect(challenge?.player1Id) {
+        if (challenge?.player1Id != null) {
+            Firebase.firestore.collection("players").document(challenge.player1Id)
+                .get()
+                .addOnSuccessListener { document ->
+                    val name = document.getString("name")
+                    playerName.value = name ?: "Unknown Player"
+                }
+                .addOnFailureListener {
+                    playerName.value = "Unknown Player"
+                }
+        }
+    }
+
+
+    if (challenge != null) {  // kollar så det finns en challenge.
         AlertDialog(
             onDismissRequest = { model.incomingChallenge.value = null },
             title = { Text("You have been challenged!") },
-            text = { Text("Player ${it.player1Id} has challenged you to a game.") },
+            text = { Text("Player ${playerName.value} has challenged you to a game.") },
             confirmButton = {
                 Button(onClick = {
-                    db.collection("games").document(it.gameId).update("gameState", "ongoing")
-                    navController.navigate("MainScreen/${it.gameId}")
+                    db.collection("games").document(challenge.gameId).update("gameState", "ongoing")
+                    navController.navigate("MainScreen/${challenge.gameId}")
                     model.incomingChallenge.value = null
                 }) {
                     Text("Accept")
@@ -65,7 +85,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
             },
             dismissButton = {
                 Button(onClick = {
-                    db.collection("games").document(it.gameId).delete()
+                    db.collection("games").document(challenge.gameId).delete()
                     model.incomingChallenge.value = null
                 }) {
                     Text("Decline")
