@@ -32,7 +32,24 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
             game = game,
             onTileClick = { index ->
                 if (game.gameBoard[index] == 0 && game.currentPlayer == model.localPlayerId.value) {
+                    val updatedBoard = game.gameBoard.toMutableList()
+                    updatedBoard[index] = if (game.currentPlayer == game.player1Id) 1 else 2
 
+                    val nextPlayer = if (game.currentPlayer == game.player1Id) game.player2Id else game.player1Id
+
+                    db.collection("games").document(gameId).update(
+                        mapOf(
+                            "gameBoard" to updatedBoard,
+                            "currentPlayer" to nextPlayer
+                        )
+                    )
+                    val winner = checkWinner(updatedBoard)
+                    if (winner != null) {
+                        db.collection("games").document(gameId).update(
+                            "gameState", "finished"
+                        )
+                        navController.navigate("LobbyScreen")
+                    }
                 }
             }
         )
