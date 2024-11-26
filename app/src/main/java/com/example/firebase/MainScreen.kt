@@ -26,6 +26,10 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
                     if (error == null && snapshot != null && snapshot.exists()) {
                         val game = snapshot.toObject(Game::class.java)
                         gameState.value = game
+
+                        if (game != null && game.gameState == "finished" && winnerOfGame.value == null) {
+                            winnerOfGame.value = game.winner
+                        }
                     }
                 }
         }
@@ -96,7 +100,7 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
 
     winnerOfGame.value?.let { winner ->
         AlertDialog(
-            onDismissRequest = { },
+            onDismissRequest = {  },
             title = { Text("We have a winner!") },
             text = {
                 Text(
