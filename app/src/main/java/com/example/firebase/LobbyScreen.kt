@@ -108,7 +108,6 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                 Button(onClick = {
                     db.collection("games").document(challenge.gameId).update(
                         mapOf(
-                            "gameState" to "ongoing",
                             "currentPlayer" to challenge.player1Id // Den som utmanade börjar
                         )
                     )

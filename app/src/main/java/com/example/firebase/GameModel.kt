@@ -68,10 +68,12 @@ class GameModel: ViewModel() {
 
 
 data class Game(
-    var gameId: String = "",    // lade till denna i test
+    var gameId: String = "",
     var gameState: String = "pending",
     var player1Id: String = "",
     var player2Id: String = "",
     var gameBoard: List<Int> = List(9) { 0 },
-    var currentPlayer: String = ""
+    var currentPlayer: String = "",
+    var player1ReadyOrNot: Boolean = false,
+    var player2ReadyOrNot: Boolean = false,
 )
