@@ -31,8 +31,6 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
     val playerList = remember { MutableStateFlow<List<Player>>(emptyList()) }
     val coroutineScope = rememberCoroutineScope()
 
-  //  var AreOnline = remember { mutableStateOf(false) }
-
     /*
     *     LaunchedEffect(Unit) {
         model.listenForChallenges()
@@ -108,12 +106,18 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
             text = { Text("Player ${playerName.value} has challenged you to a game.") },
             confirmButton = {
                 Button(onClick = {
-                    db.collection("games").document(challenge.gameId).update("gameState", "ongoing")
+                    db.collection("games").document(challenge.gameId).update(
+                        mapOf(
+                            "gameState" to "ongoing",
+                            "currentPlayer" to challenge.player1Id // Den som utmanade börjar
+                        )
+                    )
                     navController.navigate("MainScreen/${challenge.gameId}")
                     model.incomingChallenge.value = null
                 }) {
                     Text("Accept")
                 }
+
             },
             dismissButton = {
                 Button(onClick = {

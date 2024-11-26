@@ -63,27 +63,6 @@ class GameModel: ViewModel() {
         }
     }
 
-
-    /*
-    fun listenForChallenges() {     //ZZZ
-        db.collection("games")
-            .whereEqualTo("player2Id", localPlayerId.value)
-            .whereEqualTo("gameState", "pending")
-            .addSnapshotListener { value, error ->
-                if (error != null) {
-                    return@addSnapshotListener
-                }
-                if (value != null) {
-                    for (doc in value.documents) {
-                        val game = doc.toObject(Game::class.java)
-                        if (game != null) {
-                            incomingChallenge.value = game
-                        }
-                    }
-                }
-            }
-    }
-    */
 }
 
 
@@ -94,4 +73,5 @@ data class Game(
     var player1Id: String = "",
     var player2Id: String = "",
     var gameBoard: List<Int> = List(9) { 0 },
+    var currentPlayer: String = ""
 )
