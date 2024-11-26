@@ -42,6 +42,29 @@ class GameModel: ViewModel() {
                 }
             }
     }
+
+    fun listenForChallenges() {
+        val currentPlayerId = localPlayerId.value
+        if (currentPlayerId != null) {
+            Firebase.firestore.collection("games")
+                .whereEqualTo("player2Id", currentPlayerId)
+                .whereEqualTo("gameState", "pending")
+                .addSnapshotListener { snapshot, error ->
+                    if (error == null && snapshot != null) {
+                        for (doc in snapshot.documents) {
+                            val game = doc.toObject(Game::class.java)
+                            if (game != null) {
+                                incomingChallenge.value = game.copy(gameId = doc.id)
+                                break
+                            }
+                        }
+                    }
+                }
+        }
+    }
+
+
+    /*
     fun listenForChallenges() {     //ZZZ
         db.collection("games")
             .whereEqualTo("player2Id", localPlayerId.value)
@@ -60,6 +83,7 @@ class GameModel: ViewModel() {
                 }
             }
     }
+    */
 }
 
 

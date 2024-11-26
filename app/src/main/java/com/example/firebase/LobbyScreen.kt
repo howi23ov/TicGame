@@ -33,8 +33,8 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
 
   //  var AreOnline = remember { mutableStateOf(false) }
 
-
-    LaunchedEffect(Unit) {
+    /*
+    *     LaunchedEffect(Unit) {
         model.listenForChallenges()
         db.collection("players").addSnapshotListener { value, error ->
             if (error == null && value != null) {
@@ -46,6 +46,38 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
             }
         }
     }
+*/
+
+    LaunchedEffect(Unit) {
+        val currentPlayerId = model.localPlayerId.value
+        model.listenForChallenges()
+        if (currentPlayerId != null) {
+            db.collection("games")
+                .whereEqualTo("player1Id", currentPlayerId)
+                .addSnapshotListener { value, error ->
+                    if (error == null && value != null) {
+                        for (doc in value.documents) {
+                            val game = doc.toObject(Game::class.java)
+                            if (game?.gameState == "declined") {
+                                //för att Navigera tillbaka till lobbyn, tar öven bort spelet
+                                db.collection("games").document(doc.id).delete()
+                                navController.navigate("LobbyScreen")
+                            }
+                        }
+                    }
+                }
+        }
+
+        db.collection("players").addSnapshotListener { value, error ->
+            if (error == null && value != null) {
+                val players = value.toObjects(Player::class.java)
+                coroutineScope.launch {
+                    playerList.emit(players)
+                }
+            }
+        }
+    }
+
 
 
 
@@ -85,12 +117,24 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
             },
             dismissButton = {
                 Button(onClick = {
-                    db.collection("games").document(challenge.gameId).delete()
-                    model.incomingChallenge.value = null
+                    val gameId = challenge.gameId
+                    if (!gameId.isNullOrEmpty()) {
+                        db.collection("games").document(gameId).update("gameState", "declined")
+                            .addOnSuccessListener {
+                                model.incomingChallenge.value = null
+                            }
+                            .addOnFailureListener { e ->
+                                Log.e("LobbyScreen", "Failed to update game state to declined: $gameId", e)
+                                model.incomingChallenge.value = null
+                            }
+                    } else {
+                        model.incomingChallenge.value = null
+                    }
                 }) {
                     Text("Decline")
                 }
             }
+
         )
     }
 
