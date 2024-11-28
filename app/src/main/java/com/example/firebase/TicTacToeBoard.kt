@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 
@@ -42,7 +43,9 @@ fun TicTacToeBoard(game: Game, playerMap: Map<String, Player>, onTileClick: (Int
                         modifier = Modifier
                             .size(110.dp)
                             .padding(5.dp)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                            .background(
+                                color = Color.Green,
+                                shape = RoundedCornerShape(20.dp))
                             .clickable { onTileClick(index) }
                             .border(
                                 width = 2.dp,

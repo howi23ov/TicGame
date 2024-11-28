@@ -34,20 +34,6 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
     val playerList = remember { MutableStateFlow<List<Player>>(emptyList()) }
     val coroutineScope = rememberCoroutineScope()
 
-    /*
-    *     LaunchedEffect(Unit) {
-        model.listenForChallenges()
-        db.collection("players").addSnapshotListener { value, error ->
-            if (error == null && value != null) {
-                val players = value.toObjects(Player::class.java)
-                coroutineScope.launch {
-                    playerList.emit(players)
-                   // AreOnline.value = players.all { it.status == "online" }
-                }
-            }
-        }
-    }
-*/
 
     LaunchedEffect(Unit) {
         val currentPlayerId = model.localPlayerId.value
@@ -101,7 +87,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
         }
     }
 
-
+    // ________________
     if (challenge != null) {
         AlertDialog(
             onDismissRequest = { model.incomingChallenge.value = null },
@@ -111,15 +97,18 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                 Button(onClick = {
                     db.collection("games").document(challenge.gameId).update(
                         mapOf(
+                            "gameState" to "pending",
                             "currentPlayer" to challenge.player1Id // Den som utmanade börjar
                         )
-                    )
-                    navController.navigate("MainScreen/${challenge.gameId}")
-                    model.incomingChallenge.value = null
+                    ).addOnSuccessListener {
+                        navController.navigate("MainScreen/${challenge.gameId}")
+                        model.incomingChallenge.value = null // Nollställer utmaningen
+                    }.addOnFailureListener { e ->
+                        Log.e("LobbyScreen", "there was an issue to update game state: ${challenge.gameId}", e)
+                    }
                 }) {
                     Text("Accept")
                 }
-
             },
             dismissButton = {
                 Button(onClick = {
@@ -127,10 +116,10 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                     if (!gameId.isNullOrEmpty()) {
                         db.collection("games").document(gameId).update("gameState", "declined")
                             .addOnSuccessListener {
-                                model.incomingChallenge.value = null
+                                model.incomingChallenge.value = null // Nollställer utmaningen
                             }
                             .addOnFailureListener { e ->
-                                Log.e("LobbyScreen", "Failed to update game state to declined: $gameId", e)
+                                Log.e("LobbyScreen", "there was an issue to update game state to declined: $gameId", e)
                                 model.incomingChallenge.value = null
                             }
                     } else {
@@ -140,73 +129,98 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                     Text("Decline")
                 }
             }
-
         )
     }
 
-
-
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-        LazyColumn(modifier = Modifier.padding(innerPadding)) {
-            items(players) { player ->
-                ListItem(
-                    headlineContent = {
-                        Text("Name: ${player.name}")
-                    },
-                    supportingContent = {
-                        Text("Status: ${player.status}")
-                    },
-                    trailingContent = {
-                        Button(onClick = {
-                            val currentPlayerId = model.localPlayerId.value
-                            if (currentPlayerId != null) {
-                                val newGame = Game(
-                                    player1Id = currentPlayerId,
-                                    player2Id = player.playerID,
-                                    gameState = "pending"
-                                )
-
-                                db.collection("games")
-                                    .add(newGame)
-                                    .addOnSuccessListener { documentReference ->
-                                        navController.navigate("MainScreen/${documentReference.id}")
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Log.e("LobbyScreen", "Error creating game", e)
-                                    }
+// denna kontroll rensar utmaningar när spelet avslutas
+    LaunchedEffect(model.localPlayerId.value) {
+        val currentPlayerId = model.localPlayerId.value
+        if (currentPlayerId != null) {
+            db.collection("games")
+                .whereEqualTo("player2Id", currentPlayerId)
+                .addSnapshotListener { snapshot, error ->
+                    if (error == null && snapshot != null) {
+                        for (doc in snapshot.documents) {
+                            val game = doc.toObject(Game::class.java)
+                            if (game != null && game.gameState == "finished") {
+                                model.incomingChallenge.value = null // Rensar utmaningen
                             }
-                        }) {
-                            Text("Challenge")
-                        } //__________denna biten är en deleteknapp för att snabbare kunna ta bort alla namn som blir tillagna i databasen när jag gör många tester
-                        // såklart in optimalt att ha i en riktig app så denna biten tills ___ kan kommentaras bort eller tas bort helt
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                db.collection("players").document(player.playerID)
-                                    .delete()
-                                    .addOnSuccessListener {
-                                        Log.d(
-                                            "LobbyScreen",
-                                            "Player ${player.name} deleted successfully."
-                                        )
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Log.e(
-                                            "LobbyScreen",
-                                            "Error deleting player: ${player.name}",
-                                            e
-                                        )
-                                    }
-                            }
-                        ) {
-                            Text("Delete")
                         }
-                    } // _________________
-                )
-            }
+                    }
+                }
         }
-
-
     }
+
+
+
+
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            LazyColumn(modifier = Modifier.padding(innerPadding)) {
+                items(players) { player ->
+                    ListItem(
+                        headlineContent = {
+                            Text("Name: ${player.name}")
+                        },
+                        supportingContent = {
+                            Text("Status: ${player.status}")
+                        },
+                        trailingContent = {
+                            Row { // är för att lägga till flere knappar
+                                Button(
+                                    onClick = {
+                                        val currentPlayerId = model.localPlayerId.value
+                                        if (currentPlayerId != null) {
+                                            val newGame = Game(
+                                                player1Id = currentPlayerId,
+                                                player2Id = player.playerID,
+                                                gameState = "pending"
+                                            )
+
+                                            db.collection("games")
+                                                .add(newGame)
+                                                .addOnSuccessListener { documentReference ->
+                                                    navController.navigate("MainScreen/${documentReference.id}")
+                                                }
+                                                .addOnFailureListener { e ->
+                                                    Log.e("LobbyScreen", "Error creating game", e)
+                                                }
+                                        }
+                                    }
+                                ) {
+                                    Text("Challenge")
+                                }
+
+                                // ________ detta är en delete knapp för att snabbare kunna ta bort alla spelare i firebase som skapas när jag gör många tester
+                                // såklart inte optimalt att ha i en riktig app så kan tas bort eller kommentereas ut
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(
+                                    onClick = {
+                                        db.collection("players").document(player.playerID)
+                                            .delete()
+                                            .addOnSuccessListener {
+                                                Log.d(
+                                                    "LobbyScreen",
+                                                    "Player ${player.name} deleted successfully."
+                                                )
+                                            }
+                                            .addOnFailureListener { e ->
+                                                Log.e(
+                                                    "LobbyScreen",
+                                                    "Error deleting player: ${player.name}",
+                                                    e
+                                                )
+                                            }
+                                    }
+                                ) {
+                                    Text("Delete")
+                                }
+                                // ________   kommentera ut bort hit
+                            }
+                        }
+                    )
+                }
+            }
+
+        }
 
 }

@@ -53,7 +53,7 @@ class GameModel: ViewModel() {
                     if (error == null && snapshot != null) {
                         for (doc in snapshot.documents) {
                             val game = doc.toObject(Game::class.java)
-                            if (game != null) {
+                            if (game != null && game.gameState == "pending") {
                                 incomingChallenge.value = game.copy(gameId = doc.id)
                                 break
                             }
