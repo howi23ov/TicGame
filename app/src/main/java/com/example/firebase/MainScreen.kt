@@ -5,6 +5,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.navigation.NavController
@@ -17,6 +18,8 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
     val db = Firebase.firestore
     val gameState = remember { mutableStateOf<Game?>(null) }
     val winnerOfGame = remember { mutableStateOf<Int?>(null) }
+    val game = gameState.value
+
 
     // Lyssna på spelet från Firestore
     LaunchedEffect(gameId) {
@@ -35,7 +38,7 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
         }
     }
 
-    val game = gameState.value
+
 
     if (game != null && game.gameState == "pending" && gameId != null) {
         val currentPlayerId = model.localPlayerId.value
@@ -65,9 +68,13 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
         }
     }
 
+
+    val playerMap by model.playerMap.collectAsStateWithLifecycle()
+
     if (game != null && game.gameState == "ongoing" && gameId != null) {
         TicTacToeBoard(
             game = game,
+            playerMap = playerMap,
             onTileClick = { index ->
                 if (game.gameBoard[index] == 0 && game.currentPlayer == model.localPlayerId.value) {
                     val updatedBoard = game.gameBoard.toMutableList()
@@ -97,6 +104,10 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
             }
         )
     }
+
+
+
+
 
     winnerOfGame.value?.let { winner ->
         AlertDialog(

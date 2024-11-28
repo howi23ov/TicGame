@@ -1,8 +1,11 @@
 package com.example.firebase
 
 import android.util.Log
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
@@ -99,7 +102,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
     }
 
 
-    if (challenge != null) {  // kollar så det finns en challenge.
+    if (challenge != null) {
         AlertDialog(
             onDismissRequest = { model.incomingChallenge.value = null },
             title = { Text("You have been challenged!") },
@@ -141,6 +144,8 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
         )
     }
 
+
+
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         LazyColumn(modifier = Modifier.padding(innerPadding)) {
             items(players) { player ->
@@ -172,12 +177,36 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                             }
                         }) {
                             Text("Challenge")
+                        } //__________denna biten är en deleteknapp för att snabbare kunna ta bort alla namn som blir tillagna i databasen när jag gör många tester
+                        // såklart in optimalt att ha i en riktig app så denna biten tills ___ kan kommentaras bort eller tas bort helt
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                db.collection("players").document(player.playerID)
+                                    .delete()
+                                    .addOnSuccessListener {
+                                        Log.d(
+                                            "LobbyScreen",
+                                            "Player ${player.name} deleted successfully."
+                                        )
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Log.e(
+                                            "LobbyScreen",
+                                            "Error deleting player: ${player.name}",
+                                            e
+                                        )
+                                    }
+                            }
+                        ) {
+                            Text("Delete")
                         }
-                    }
+                    } // _________________
                 )
             }
         }
 
 
     }
+
 }
