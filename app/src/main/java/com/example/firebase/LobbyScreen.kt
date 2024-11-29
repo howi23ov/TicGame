@@ -46,7 +46,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                         for (doc in value.documents) {
                             val game = doc.toObject(Game::class.java)
                             if (game?.gameState == "declined") {
-                                //för att Navigera tillbaka till lobbyn, tar öven bort spelet
+                                // Navigera tillbaka till lobbyn och ta bort spelet
                                 db.collection("games").document(doc.id).delete()
                                 navController.navigate("LobbyScreen")
                             }
@@ -63,7 +63,22 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                 }
             }
         }
+
+        // hanter  tom games samling
+        db.collection("games").addSnapshotListener { value, error ->
+            if (error != null) {
+                println("Error listening to games: ${error.message}")
+                return@addSnapshotListener
+            }
+
+            if (value == null || value.isEmpty) {
+                println("No games available.")
+            }
+        }
     }
+
+
+
 
 
 

@@ -76,5 +76,5 @@ data class Game(
     var currentPlayer: String = "",
     var player1ReadyOrNot: Boolean = false,
     var player2ReadyOrNot: Boolean = false,
-    var winner: Int? = null,
+    var winner: String? = null,
 )

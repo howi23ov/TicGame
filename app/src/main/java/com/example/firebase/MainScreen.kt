@@ -17,43 +17,49 @@ import com.google.firebase.firestore.firestore
 fun MainScreen(navController: NavController, model: GameModel, gameId: String?) {
     val db = Firebase.firestore
     val gameState = remember { mutableStateOf<Game?>(null) }
-    val winnerOfGame = remember { mutableStateOf<Int?>(null) }
+    val winnerOfGame = remember { mutableStateOf<String?>(null) }
     val game = gameState.value
 
-
-    // Lyssna på spelet från Firestore
     LaunchedEffect(gameId) {
         if (gameId != null) {
             db.collection("games").document(gameId)
                 .addSnapshotListener { snapshot, error ->
-                    if (error == null && snapshot != null && snapshot.exists()) {
-                        val game = snapshot.toObject(Game::class.java)
-                        gameState.value = game
+                    if (error != null) {
 
-                        if (game != null && game.gameState == "finished" && winnerOfGame.value == null) {
-                            winnerOfGame.value = game.winner
+                        println("Error fetching game: ${error.message}")
+                        return@addSnapshotListener
+                    }
+
+                    if (snapshot != null && snapshot.exists()) {
+                        val gameSnap = snapshot.toObject(Game::class.java)
+                        gameState.value = gameSnap
+
+                        if (gameSnap != null && gameSnap.gameState == "finished" && winnerOfGame.value == null) {
+                            winnerOfGame.value = gameSnap.winner
                         }
+                    } else {
+
+                        println("game doesn't exist or has been removed.")
+                        navController.navigate("LobbyScreen")
                     }
                 }
         }
     }
 
-
-
     if (game != null && game.gameState == "pending" && gameId != null) {
         val currentPlayerId = model.localPlayerId.value
         currentPlayerId?.let { playerId ->
             AlertDialog(
-                onDismissRequest = {  },
-                title = { Text("Get Ready!") },
-                text = { Text("Click 'I'm Ready' to start the game.") },
+                onDismissRequest = { },
+                title = { Text("Ready to play!") },
+                text = { Text("press ready to start the game.") },
                 confirmButton = {
                     Button(onClick = {
                         val readyField =
                             if (playerId == game.player1Id) "player1ReadyOrNot" else "player2ReadyOrNot"
                         db.collection("games").document(gameId).update(readyField, true)
                     }) {
-                        Text("I'm Ready")
+                        Text("i am ready ")
                     }
                 },
                 dismissButton = {}
@@ -61,13 +67,11 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
         }
     }
 
-    // det här Startar spelet när båda spelarna är redo
     LaunchedEffect(game) {
         if (game != null && game.player1ReadyOrNot && game.player2ReadyOrNot && game.gameState == "pending") {
             db.collection("games").document(gameId!!).update("gameState", "ongoing")
         }
     }
-
 
     val playerMap by model.playerMap.collectAsStateWithLifecycle()
 
@@ -90,39 +94,42 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
                         )
                     )
 
-                    val winner = checkWinner(updatedBoard)
-                    if (winner != null) {
+                    val winnerNumber = checkWinner(updatedBoard)
+                    if (winnerNumber != null) {
+
+                        val winnerName = if (winnerNumber == 1) {
+                            playerMap[game.player1Id]?.name ?: "Unknown player"
+                        } else {
+                            playerMap[game.player2Id]?.name ?: "Unknown player"
+                        }
+
                         db.collection("games").document(gameId).update(
                             mapOf(
                                 "gameState" to "finished",
-                                "winner" to winner
+                                "winner" to winnerName
                             )
                         )
-                        winnerOfGame.value = winner
+                        winnerOfGame.value = winnerName
                     }
                 }
             }
         )
     }
 
-
-
-
-
-    winnerOfGame.value?.let { winner ->
+    winnerOfGame.value?.let { winnerName ->
         AlertDialog(
-            onDismissRequest = {  },
-            title = { Text("We have a winner!") },
+            onDismissRequest = { },
+            title = { Text("We have a winner") },
             text = {
                 Text(
-                    text = if (winner == 1) "Player X wins!" else "Player O wins!"
+                    text = "$winnerName Winner!"
                 )
             },
             confirmButton = {
                 Button(onClick = {
                     navController.navigate("LobbyScreen")
                 }) {
-                    Text("Back to Lobby")
+                    Text("Back to Lobby screen")
                 }
             }
         )
@@ -132,5 +139,4 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
         Text("Loading game...")
     }
 }
-
 
