@@ -116,20 +116,20 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
         )
     }
 
-    winnerOfGame.value?.let { winnerName ->
+    if (winnerOfGame.value != null) {
         AlertDialog(
             onDismissRequest = { },
             title = { Text("We have a winner") },
             text = {
                 Text(
-                    text = "$winnerName Winner!"
+                    text = "${winnerOfGame.value} is Victorious!"
                 )
             },
             confirmButton = {
                 Button(onClick = {
                     navController.navigate("LobbyScreen")
                 }) {
-                    Text("Back to Lobby screen")
+                    Text("Back to Lobby it is then")
                 }
             }
         )
