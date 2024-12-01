@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -46,7 +45,6 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                         for (doc in value.documents) {
                             val game = doc.toObject(Game::class.java)
                             if (game?.gameState == "declined") {
-                                // Navigera tillbaka till lobbyn och ta bort spelet
                                 db.collection("games").document(doc.id).delete()
                                 navController.navigate("LobbyScreen")
                             }
@@ -64,56 +62,44 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
             }
         }
 
-        // hanter  tom games samling
-        db.collection("games").addSnapshotListener { value, error ->
-            if (error != null) {
-                println("Error listening to games: ${error.message}")
-                return@addSnapshotListener
-            }
-
-            if (value == null || value.isEmpty) {
-                println("No games available.")
-            }
-        }
     }
 
 
 
 
-
-
-
-    val players by playerList.collectAsStateWithLifecycle() // kan va denna som är rr
+    val players by playerList.collectAsStateWithLifecycle()
     val challenge = model.incomingChallenge.value
-    val playerName = remember { mutableStateOf("") }
 
     // för att hämta spelarens namn iställer för att visa just bara ID
-    LaunchedEffect(challenge?.player1Id) {
-        if (challenge?.player1Id != null) {
-            Firebase.firestore.collection("players").document(challenge.player1Id)
-                .get()
-                .addOnSuccessListener { document ->
-                    val name = document.getString("name")
-                    playerName.value = name ?: "Unknown Player"
-                }
-                .addOnFailureListener {
-                    playerName.value = "Unknown Player"
-                }
+    val playerMap by model.playerMap.collectAsStateWithLifecycle()
+    val challengersId = model.incomingChallenge.value?.player1Id
+    val challengersName: String
+
+    if (challengersId != null) {
+        val player = playerMap[challengersId]
+        if (player != null) {
+            challengersName = player.name
+        } else {
+            challengersName = "Unknown Player"
         }
+    } else {
+        challengersName = "No Challenge"
     }
+
+
 
     // ________________
     if (challenge != null) {
         AlertDialog(
             onDismissRequest = { model.incomingChallenge.value = null },
             title = { Text("You have been challenged!") },
-            text = { Text("Player ${playerName.value} has challenged you to a game.") },
+            text = { Text("Player ${challengersName} has challenged you to a game.") },
             confirmButton = {
                 Button(onClick = {
                     db.collection("games").document(challenge.gameId).update(
                         mapOf(
                             "gameState" to "pending",
-                            "currentPlayer" to challenge.player1Id // Den som utmanade börjar
+                            "currentPlayer" to challenge.player1Id // så att den som utmanade börjar
                         )
                     ).addOnSuccessListener {
                         navController.navigate("MainScreen/${challenge.gameId}")
@@ -131,7 +117,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                     if (!gameId.isNullOrEmpty()) {
                         db.collection("games").document(gameId).update("gameState", "declined")
                             .addOnSuccessListener {
-                                model.incomingChallenge.value = null // Nollställer utmaningen
+                                model.incomingChallenge.value = null
                             }
                             .addOnFailureListener { e ->
                                 Log.e("LobbyScreen", "there was an issue to update game state to declined: $gameId", e)
@@ -149,29 +135,15 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
 
 // denna kontroll rensar utmaningar när spelet avslutas
     LaunchedEffect(model.localPlayerId.value) {
-        val currentPlayerId = model.localPlayerId.value
-        if (currentPlayerId != null) {
-            db.collection("games")
-                .whereEqualTo("player2Id", currentPlayerId)
-                .addSnapshotListener { snapshot, error ->
-                    if (error == null && snapshot != null) {
-                        for (doc in snapshot.documents) {
-                            val game = doc.toObject(Game::class.java)
-                            if (game != null && game.gameState == "finished") {
-                                model.incomingChallenge.value = null // Rensar utmaningen
-                            }
-                        }
-                    }
-                }
-        }
+        model.incomingChallenge.value = null
     }
 
 
-
+        val filteredPlayers = players.filter { it.playerID != model.localPlayerId.value } // kom upp automatiskt efter jag skrev in val filteredPlayers = players.filter
 
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             LazyColumn(modifier = Modifier.padding(innerPadding)) {
-                items(players) { player ->
+                items(filteredPlayers) { player ->       // böt ut items(players) för att filtera ut sig själv
                     ListItem(
                         headlineContent = {
                             Text("Name: ${player.name}")
@@ -229,7 +201,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                                 ) {
                                     Text("Delete")
                                 }
-                               */ // ________   kommentera ut bort hit
+                              */  // ________   kommentera ut bort hit
                             }
                         }
                     )

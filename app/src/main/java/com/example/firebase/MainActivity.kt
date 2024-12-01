@@ -10,7 +10,6 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -24,14 +23,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             FirebaseTheme {
-                TicTacToeApp()
+                ConnectFourBoard()
             }
         }
     }
 }
 
 @Composable
-fun TicTacToeApp() {
+fun ConnectFourBoard() {  // ändrade namn från tiCtacToeApp till connect four
     val navController = rememberNavController()
     val gameModel = remember { GameModel() }
 
@@ -66,6 +65,6 @@ fun <T> StateFlow<T>.collectAsStateWithLifecycle(): State<T> {
 @Composable
 fun DefaultPreview() {
     FirebaseTheme {
-        TicTacToeApp()
+        ConnectFourBoard()
     }
 }

@@ -43,6 +43,7 @@ class GameModel: ViewModel() {
             }
     }
 
+
     fun listenForChallenges() {
         val currentPlayerId = localPlayerId.value
         if (currentPlayerId != null) {
@@ -63,6 +64,10 @@ class GameModel: ViewModel() {
         }
     }
 
+}
+
+fun isBoardFull(board: List<Int>): Boolean {
+    return board.none { it == 0 } //
 }
 
 

@@ -8,10 +8,4 @@ data class Player(
 
     )
 
-fun addScore(score: Int){
 
-}
-
-fun changeTurn(){
-
-}
