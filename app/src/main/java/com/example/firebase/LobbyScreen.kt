@@ -174,7 +174,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                             }
 
                             // ________ detta är en delete knapp för att snabbare kunna ta bort alla spelare i firebase som skapas när jag gör många tester
-                           /* // såklart inte optimalt att ha i en riktig app så kan tas bort eller kommentereas ut
+                            // såklart inte optimalt att ha i en riktig app så kan tas bort eller kommentereas ut
                             Spacer(modifier = Modifier.width(8.dp))
                             Button(
                                 onClick = {
@@ -197,7 +197,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                             ) {
                                 Text("Delete")
                             }
-                           */ // ________   kommentera ut bort hit
+                            // ________   kommentera ut bort hit
                         }
                     }
                 )

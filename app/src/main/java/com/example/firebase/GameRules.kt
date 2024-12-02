@@ -1,7 +1,9 @@
 package com.example.firebase
 
+
 fun checkWinner(board: List<Int>): Int? {
     val winningCombinations = listOf(
+
 
         // ----------------------Vertikal----------------------------
         listOf(0, 7, 14, 21), listOf(7, 14, 21, 28), listOf(14, 21, 28, 35),
@@ -31,7 +33,7 @@ fun checkWinner(board: List<Int>): Int? {
         listOf(14, 22, 30, 38), listOf(15, 23, 31, 39), listOf(16, 24, 32, 40), listOf(17, 25, 33, 41),
 
 
-    )
+        )
 
     for (combination in winningCombinations) {
         val (a, b, c, d) = combination

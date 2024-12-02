@@ -110,9 +110,17 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
                 val cols = 7
                 val board = game.gameBoard.toMutableList()
 
-                val targetIndex = (rows - 1 downTo 0).map { it * cols + col }.find { board[it] == 0 }
-                if (targetIndex != null && game.currentPlayer == model.localPlayerId.value) {
-                    board[targetIndex] = if (game.currentPlayer == game.player1Id) 1 else 2
+                var findFirstFreeColumnPlace: Int? = null 
+                for (row in rows - 1 downTo 0) {
+                    val index = row * cols + col
+                    if (board[index] == 0) {
+                        findFirstFreeColumnPlace = index
+                        break
+                    }
+                }
+
+                if (findFirstFreeColumnPlace != null && game.currentPlayer == model.localPlayerId.value) {
+                    board[findFirstFreeColumnPlace] = if (game.currentPlayer == game.player1Id) 1 else 2
 
                     val nextPlayer =
                         if (game.currentPlayer == game.player1Id) game.player2Id else game.player1Id
@@ -175,4 +183,3 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
         Text("Loading game...")
     }
 }
-
