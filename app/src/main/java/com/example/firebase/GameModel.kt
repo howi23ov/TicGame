@@ -6,20 +6,22 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 
+
 class GameModel: ViewModel() {
     val db = Firebase.firestore                              // initzierar en referens till firestore-databasen
     var localPlayerId = mutableStateOf<String?>(null)  // håller reda på spelarens lokala ID som är asscocierat med den enhet som kör appen
     val playerMap = MutableStateFlow<Map<String, Player>>(emptyMap()) // är en statedlow som håller en karta över spelare. nyckeln är är spelarens firestore dokument, intizieras till en tom karta med empty
     val gameMap = MutableStateFlow<Map<String, Game>>(emptyMap()) // håller reda på spelarens data och är en liknande playerMap. datan lagras i firebasen unde games
-    val incomingChallenge = mutableStateOf<Game?>(null)
+    val incomingChallenge = mutableStateOf<Game?>(null)  // håller en utmaning i game objekt som har skickats till den lokala spelaren
 
     fun initGame() {              // lyssnar på uppdateringar från firestore och uppdaterar stateflow egenskaper
 
         db.collection("players")
             .addSnapshotListener { value, error ->
-                if (error != null) {             // om firestore lyssningen misslyckades
-                    return@addSnapshotListener   // avslutar den aktuella exekveringen av addsnapshotlistener
+                if (error != null) {
+                    return@addSnapshotListener
                 }
+
 
                 if (value != null) {
                     val updatedMap = value.documents.associate { doc ->
@@ -28,6 +30,8 @@ class GameModel: ViewModel() {
                     playerMap.value = updatedMap
                 }
             }
+
+
 
         db.collection("games")
             .addSnapshotListener { value, error ->
@@ -42,7 +46,6 @@ class GameModel: ViewModel() {
                 }
             }
     }
-
 
     fun listenForChallenges() {
         val currentPlayerId = localPlayerId.value
@@ -67,8 +70,9 @@ class GameModel: ViewModel() {
 }
 
 fun isBoardFull(board: List<Int>): Boolean {
-    return board.none { it == 0 } //
+    return board.none { it == 0 }
 }
+
 
 
 
@@ -77,7 +81,7 @@ data class Game(
     var gameState: String = "pending",
     var player1Id: String = "",
     var player2Id: String = "",
-    var gameBoard: List<Int> = List(9) { 0 },
+    var gameBoard: List<Int> = List(42) { 0 },
     var currentPlayer: String = "",
     var player1ReadyOrNot: Boolean = false,
     var player2ReadyOrNot: Boolean = false,

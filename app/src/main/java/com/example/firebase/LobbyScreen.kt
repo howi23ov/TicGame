@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -64,7 +65,6 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
 
     }
 
-
     val players by playerList.collectAsStateWithLifecycle()
     val challenge = model.incomingChallenge.value
 
@@ -95,7 +95,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                     db.collection("games").document(challenge.gameId).update(
                         mapOf(
                             "gameState" to "pending",
-                            "currentPlayer" to challenge.player1Id // så att den som utmanade börjar
+                            "currentPlayer" to challenge.player1Id
                         )
                     ).addOnSuccessListener {
                         navController.navigate("MainScreen/${challenge.gameId}")
@@ -135,75 +135,75 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
     }
 
 
-        val filteredPlayers = players.filter { it.playerID != model.localPlayerId.value }
+    val filteredPlayers = players.filter { it.playerID != model.localPlayerId.value } //
 
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            LazyColumn(modifier = Modifier.padding(innerPadding)) {
-                items(filteredPlayers) { player ->       // böt ut items(players) för att filtera ut sig själv
-                    ListItem(
-                        headlineContent = {
-                            Text("Name: ${player.name}")
-                        },
-                        supportingContent = {
-                            Text("Status: ${player.status}")
-                        },
-                        trailingContent = {
-                            Row { // är för att lägga till flere knappar
-                                Button(
-                                    onClick = {
-                                        val currentPlayerId = model.localPlayerId.value
-                                        if (currentPlayerId != null) {
-                                            val newGame = Game(
-                                                player1Id = currentPlayerId,
-                                                player2Id = player.playerID,
-                                                gameState = "pending"
-                                            )
+    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+        LazyColumn(modifier = Modifier.padding(innerPadding)) {
+            items(filteredPlayers) { player ->       // böt ut items(players) för att filtera ut sig själv
+                ListItem(
+                    headlineContent = {
+                        Text("Name: ${player.name}")
+                    },
+                    supportingContent = {
+                        Text("Status: ${player.status}")
+                    },
+                    trailingContent = {
+                        Row { // är för att lägga till flere knappar
+                            Button(
+                                onClick = {
+                                    val currentPlayerId = model.localPlayerId.value
+                                    if (currentPlayerId != null) {
+                                        val newGame = Game(
+                                            player1Id = currentPlayerId,
+                                            player2Id = player.playerID,
+                                            gameState = "pending"
+                                        )
 
-                                            db.collection("games")
-                                                .add(newGame)
-                                                .addOnSuccessListener { documentReference ->
-                                                    navController.navigate("MainScreen/${documentReference.id}")
-                                                }
-                                                .addOnFailureListener { e ->
-                                                    Log.e("LobbyScreen", "Error creating game", e)
-                                                }
-                                        }
-                                    }
-                                ) {
-                                    Text("Challenge")
-                                }
-
-                                // ________ detta är en delete knapp för att snabbare kunna ta bort alla spelare i firebase som skapas när jag gör många tester
-                                /* // såklart inte optimalt att ha i en riktig app så kan tas bort eller kommentereas ut
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Button(
-                                    onClick = {
-                                        db.collection("players").document(player.playerID)
-                                            .delete()
-                                            .addOnSuccessListener {
-                                                Log.d(
-                                                    "LobbyScreen",
-                                                    "Player ${player.name} deleted successfully."
-                                                )
+                                        db.collection("games")
+                                            .add(newGame)
+                                            .addOnSuccessListener { documentReference ->
+                                                navController.navigate("MainScreen/${documentReference.id}")
                                             }
                                             .addOnFailureListener { e ->
-                                                Log.e(
-                                                    "LobbyScreen",
-                                                    "Error deleting player: ${player.name}",
-                                                    e
-                                                )
+                                                Log.e("LobbyScreen", "Error creating game", e)
                                             }
                                     }
-                                ) {
-                                    Text("Delete")
                                 }
-                              */  // ________   kommentera ut bort hit
+                            ) {
+                                Text("Challenge")
                             }
-                        }
-                    )
-                }
-            }
 
+                            // ________ detta är en delete knapp för att snabbare kunna ta bort alla spelare i firebase som skapas när jag gör många tester
+                           /* // såklart inte optimalt att ha i en riktig app så kan tas bort eller kommentereas ut
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    db.collection("players").document(player.playerID)
+                                        .delete()
+                                        .addOnSuccessListener {
+                                            Log.d(
+                                                "LobbyScreen",
+                                                "Player ${player.name} deleted successfully."
+                                            )
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Log.e(
+                                                "LobbyScreen",
+                                                "Error deleting player: ${player.name}",
+                                                e
+                                            )
+                                        }
+                                }
+                            ) {
+                                Text("Delete")
+                            }
+                           */ // ________   kommentera ut bort hit
+                        }
+                    }
+                )
+            }
         }
+
+    }
 
 }

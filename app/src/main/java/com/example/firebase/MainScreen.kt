@@ -101,8 +101,6 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
 
     val playerMap by model.playerMap.collectAsStateWithLifecycle()
 
-
-    // uppdaterade denna koden för disc version spelet istället för tic tac toe
     if (game != null && game.gameState == "ongoing" && gameId != null) {
         ConnectFourBoard(
             game = game,
