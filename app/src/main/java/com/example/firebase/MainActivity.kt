@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ConnectFourBoard() {  // ändrade namn från tiCtacToeApp till connect four
+fun ConnectFourBoard() {
     val navController = rememberNavController()
     val gameModel = remember { GameModel() }
 

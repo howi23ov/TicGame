@@ -65,8 +65,6 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
     }
 
 
-
-
     val players by playerList.collectAsStateWithLifecycle()
     val challenge = model.incomingChallenge.value
 
@@ -85,8 +83,6 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
     } else {
         challengersName = "No Challenge"
     }
-
-
 
     // ________________
     if (challenge != null) {
@@ -139,7 +135,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
     }
 
 
-        val filteredPlayers = players.filter { it.playerID != model.localPlayerId.value } // kom upp automatiskt efter jag skrev in val filteredPlayers = players.filter
+        val filteredPlayers = players.filter { it.playerID != model.localPlayerId.value }
 
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             LazyColumn(modifier = Modifier.padding(innerPadding)) {

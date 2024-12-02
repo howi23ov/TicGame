@@ -17,8 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
-// uppdaterade till conncet four istället för tic tac toe
-
 @Composable
 fun ConnectFourBoard(
     game: Game,
