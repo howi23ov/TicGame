@@ -1,3 +1,5 @@
+
+
 package com.example.firebase
 
 import androidx.compose.foundation.background
@@ -30,11 +32,12 @@ fun ConnectFourBoard(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val currentPlayerName = playerMap[game.currentPlayer]?.name ?: "Unknown Player"
-        val currentSymbol = if (game.currentPlayer == game.player1Id) "Red" else "Yellow"
+        val player = playerMap[game.currentPlayer]
+        val currentPlayerName = if (player != null) player.name else "Unknown Player"
+        val currentDiscColor = if (game.currentPlayer == game.player1Id) "Red" else "Yellow"
 
         Text(
-            text = "Current Player is: $currentSymbol ($currentPlayerName)",
+            text = "Current Player is: $currentDiscColor ($currentPlayerName)",
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -64,6 +67,4 @@ fun ConnectFourBoard(
         }
     }
 }
-
-
 
