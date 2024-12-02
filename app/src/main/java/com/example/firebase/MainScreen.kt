@@ -61,8 +61,6 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
     }
 
 
-
-    // lade till så man kan cancell invite
     if (game != null && game.gameState == "pending" && gameId != null) {
         val currentPlayerId = model.localPlayerId.value
         currentPlayerId?.let { playerId ->
@@ -107,20 +105,33 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
             playerMap = playerMap,
             onTileClick = { col ->
                 val rows = 6
-                val cols = 7
+                val columns = 7
                 val board = game.gameBoard.toMutableList()
 
-                var findFirstFreeColumnPlace: Int? = null 
+                    /*
+                   0  1  2  3  4  5  6
+                   7  8  9 10 11 12 13
+                  14 15 16 17 18 19 20
+                  21 22 23 24 25 26 27
+                  28 29 30 31 32 33 34
+                  35 36 37 38 39 40 41
+                  */
+
+                var findFirstFreeIndexInColumn: Int? = null
                 for (row in rows - 1 downTo 0) {
-                    val index = row * cols + col
+                    // exempel på ifall spelare klickade i rutan 36 i brädet
+                    // index = 5 * 7 + 1 = 36
+                    // col = 0 1 2 3 4 5 6 7
+
+                    val index = row * columns + col
                     if (board[index] == 0) {
-                        findFirstFreeColumnPlace = index
+                        findFirstFreeIndexInColumn = index
                         break
                     }
                 }
 
-                if (findFirstFreeColumnPlace != null && game.currentPlayer == model.localPlayerId.value) {
-                    board[findFirstFreeColumnPlace] = if (game.currentPlayer == game.player1Id) 1 else 2
+                if (findFirstFreeIndexInColumn != null && game.currentPlayer == model.localPlayerId.value) {
+                    board[findFirstFreeIndexInColumn] = if (game.currentPlayer == game.player1Id) 1 else 2
 
                     val nextPlayer =
                         if (game.currentPlayer == game.player1Id) game.player2Id else game.player1Id
