@@ -1,4 +1,3 @@
-
 package com.example.firebase
 
 import android.util.Log
@@ -18,11 +17,9 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -117,7 +114,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
             dismissButton = {
                 Button(onClick = {
                     val gameId = challenge.gameId
-                    if (!gameId.isNullOrEmpty()) {
+                    if (!gameId.isNullOrEmpty()) { 
                         db.collection("games").document(gameId).update("gameState", "declined")
                             .addOnSuccessListener {
                                 model.incomingChallenge.value = null
@@ -145,7 +142,8 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
     val playerName: String = playerMap[model.localPlayerId.value]?.name ?: "Unknown Player"
     val filteredPlayers = players.filter { it.playerID != model.localPlayerId.value } //
 
-    Scaffold(
+   // Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+    Scaffold(  // _____
         topBar = {
             Box(
                 modifier = Modifier
@@ -155,12 +153,12 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Connect Four - $playerName",
+                    text = "ConnectFour - $playerName",
                     color = Color.White,
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-        }
+        }  //---------------------
     ) { innerPadding ->
         if (filteredPlayers.isEmpty()) {
             Box(
@@ -171,9 +169,10 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
             ) {
                 Text(
                     text = "there are no players available sadly. you have to wait for others to join.",
-                    modifier = Modifier.padding(22.dp))
+                    modifier = Modifier.padding(22.dp)
+                )
             }
-        } else {
+        } else {  // ta b
             LazyColumn(modifier = Modifier.padding(innerPadding)) {
                 items(filteredPlayers) { player ->
                     ListItem(
@@ -184,7 +183,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                             Text("Status: ${player.status}")
                         },
                         trailingContent = {
-                            Row {
+                            Row { // är för att lägga till flere knappar
                                 Button(
                                     onClick = {
                                         val currentPlayerId = model.localPlayerId.value
@@ -245,3 +244,5 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
     }
 
 }
+
+

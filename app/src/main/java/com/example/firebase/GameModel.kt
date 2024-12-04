@@ -87,3 +87,4 @@ data class Game(
     var player2ReadyOrNot: Boolean = false,
     var winner: String? = null,
 )
+

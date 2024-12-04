@@ -63,7 +63,7 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
 
     if (game != null && game.gameState == "pending" && gameId != null) {
         val currentPlayerId = model.localPlayerId.value
-        currentPlayerId?.let { playerId ->
+        if (currentPlayerId != null) {
             AlertDialog(
                 onDismissRequest = {  },
                 title = { Text("Get Ready!") },
@@ -71,7 +71,7 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
                 confirmButton = {
                     Button(onClick = {
                         val readyField =
-                            if (playerId == game.player1Id) "player1ReadyOrNot" else "player2ReadyOrNot"
+                            if (currentPlayerId == game.player1Id) "player1ReadyOrNot" else "player2ReadyOrNot"
                         db.collection("games").document(gameId).update(readyField, true)
                     }) {
                         Text("i am Ready")
@@ -90,6 +90,7 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
             )
         }
     }
+
 
     LaunchedEffect(game) {
         if (game != null && game.player1ReadyOrNot && game.player2ReadyOrNot && game.gameState == "pending") {
@@ -174,7 +175,9 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
     if (winnerOfGame.value != null) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text(if (winnerOfGame.value == "It's a tie!") "Game Over" else "We have a winner!") },
+            title = { Text(
+                if (winnerOfGame.value == "It's a tie!")
+                    "Game Over" else "The Winner is") },
             text = {
                 Text(
                     text = winnerOfGame.value!!

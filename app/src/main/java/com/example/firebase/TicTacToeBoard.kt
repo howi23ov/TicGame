@@ -1,5 +1,4 @@
 
-
 package com.example.firebase
 
 import androidx.compose.foundation.background
@@ -67,4 +66,3 @@ fun ConnectFourBoard(
         }
     }
 }
-

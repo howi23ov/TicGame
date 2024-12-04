@@ -19,19 +19,19 @@ import kotlinx.coroutines.flow.StateFlow
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge()       // aktiverar en endge to edge layout. visar innhåll till alla kanter
 
-        setContent {
-            FirebaseTheme {
-                ConnectFourBoard()
+        setContent {            // detta är compose-innehåll som ska visas i appen
+            FirebaseTheme {     // ett temainställningspaket som definerar utseendet på appen
+                ConnectFourBoard() // huvudfunktion, sätter upp navigeringslogiken
             }
         }
     }
 }
 
-@Composable
+@Composable                                             // hanterar spelets struktur och navigering mellan skärmar
 fun ConnectFourBoard() {
-    val navController = rememberNavController()
+    val navController = rememberNavController()          // skapar och kommer ihåg en navigerinskontroller
     val gameModel = remember { GameModel() }
 
     LaunchedEffect(Unit) {
