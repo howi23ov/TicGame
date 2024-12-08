@@ -119,16 +119,16 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
               */
 
                 var findFirstFreeIndexInColumn: Int? = null
-                for (row in rows - 1 downTo 0) {
-                    // exempel på ifall spelare klickade i rutan 36 i brädet
-                    // index = 5 * 7 + 1 = 36
-                    // col = 0 1 2 3 4 5 6 7
+
+                var row = rows - 1
+                while (row >= 0){
 
                     val index = row * columns + col
                     if (board[index] == 0) {
                         findFirstFreeIndexInColumn = index
                         break
                     }
+                    row--
                 }
 
                 if (findFirstFreeIndexInColumn != null && game.currentPlayer == model.localPlayerId.value) {

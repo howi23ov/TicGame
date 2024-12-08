@@ -37,7 +37,6 @@ fun checkWinner(board: List<Int>): Int? {
 
     for (combination in winningCombinations) {
         val (a, b, c, d) = combination
-        // board[a], Board[b] etc är som element som. om en spelere har placerat t.ex  0 7 14 21 kommer värdena i board för dessa index vara samma
         if (board[a] != 0 && board[a] == board[b] && board[b] == board[c] && board[c] == board[d]) {
             return board[a]
         }

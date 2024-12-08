@@ -8,13 +8,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 
 class GameModel: ViewModel() {
-    val db = Firebase.firestore                              // initzierar en referens till firestore-databasen
-    var localPlayerId = mutableStateOf<String?>(null)  // håller reda på spelarens lokala ID som är asscocierat med den enhet som kör appen
-    val playerMap = MutableStateFlow<Map<String, Player>>(emptyMap()) // är en statedlow som håller en karta över spelare. nyckeln är är spelarens firestore dokument, intizieras till en tom karta med empty
-    val gameMap = MutableStateFlow<Map<String, Game>>(emptyMap()) // håller reda på spelarens data och är en liknande playerMap. datan lagras i firebasen unde games
-    val incomingChallenge = mutableStateOf<Game?>(null)  // håller en utmaning i game objekt som har skickats till den lokala spelaren
+    val db = Firebase.firestore
+    var localPlayerId = mutableStateOf<String?>(null)
+    val playerMap = MutableStateFlow<Map<String, Player>>(emptyMap())
+    val gameMap = MutableStateFlow<Map<String, Game>>(emptyMap())
+    val incomingChallenge = mutableStateOf<Game?>(null)
 
-    fun initGame() {              // lyssnar på uppdateringar från firestore och uppdaterar stateflow egenskaper
+    fun initGame() {              //
 
         db.collection("players")
             .addSnapshotListener { value, error ->
@@ -24,8 +24,8 @@ class GameModel: ViewModel() {
 
 
                 if (value != null) {
-                    val updatedMap = value.documents.associate { doc ->
-                        doc.id to doc.toObject(Player::class.java)!!
+                    val updatedMap = value.documents.associate { associatePlayer ->
+                        associatePlayer.id to associatePlayer.toObject(Player::class.java)!!
                     }
                     playerMap.value = updatedMap
                 }
@@ -45,7 +45,9 @@ class GameModel: ViewModel() {
                     gameMap.value = updatedMap
                 }
             }
+
     }
+
 
     fun listenForChallenges() {
         val currentPlayerId = localPlayerId.value
@@ -66,6 +68,7 @@ class GameModel: ViewModel() {
                 }
         }
     }
+
 
 }
 

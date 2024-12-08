@@ -1,6 +1,5 @@
 package com.example.firebase
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -21,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,17 +28,13 @@ import androidx.navigation.NavHostController
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
-
 
 @Composable
 fun LobbyScreen(navController: NavHostController, model: GameModel) {
     val db = Firebase.firestore
     val playerList = remember { MutableStateFlow<List<Player>>(emptyList()) }
-    val coroutineScope = rememberCoroutineScope()
 
-
-    LaunchedEffect(Unit) {
+    LaunchedEffect(model.localPlayerId.value) {
         val currentPlayerId = model.localPlayerId.value
         model.listenForChallenges()
         if (currentPlayerId != null) {
@@ -48,10 +42,10 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                 .whereEqualTo("player1Id", currentPlayerId)
                 .addSnapshotListener { value, error ->
                     if (error == null && value != null) {
-                        for (doc in value.documents) {
-                            val game = doc.toObject(Game::class.java)
+                        for (assignEachDocuments in value.documents) {
+                            val game = assignEachDocuments.toObject(Game::class.java)
                             if (game?.gameState == "declined") {
-                                db.collection("games").document(doc.id).delete()
+                                db.collection("games").document(assignEachDocuments.id).delete()
                                 navController.navigate("LobbyScreen")
                             }
                         }
@@ -59,18 +53,18 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                 }
         }
 
+
         db.collection("players").addSnapshotListener { value, error ->
             if (error == null && value != null) {
                 val players = value.toObjects(Player::class.java)
-                coroutineScope.launch {
-                    playerList.emit(players)
-                }
+                playerList.value = players
             }
         }
 
     }
 
-    val players by playerList.collectAsStateWithLifecycle()
+
+    val players by playerList.collectAsStateWithLifecycle() // conver to stata
     val challenge = model.incomingChallenge.value
 
     val playerMap by model.playerMap.collectAsStateWithLifecycle()
@@ -88,7 +82,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
         challengersName = "No Challenge"
     }
 
-    // ________________
+
     if (challenge != null) {
         AlertDialog(
             onDismissRequest = { model.incomingChallenge.value = null },
@@ -104,8 +98,6 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                     ).addOnSuccessListener {
                         navController.navigate("MainScreen/${challenge.gameId}")
                         model.incomingChallenge.value = null
-                    }.addOnFailureListener { e ->
-                        Log.e("LobbyScreen", "there was an issue to update game state: ${challenge.gameId}", e)
                     }
                 }) {
                     Text("Accept")
@@ -114,13 +106,12 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
             dismissButton = {
                 Button(onClick = {
                     val gameId = challenge.gameId
-                    if (!gameId.isNullOrEmpty()) { 
+                    if (!gameId.isNullOrEmpty()) {
                         db.collection("games").document(gameId).update("gameState", "declined")
                             .addOnSuccessListener {
                                 model.incomingChallenge.value = null
                             }
                             .addOnFailureListener { e ->
-                                Log.e("LobbyScreen", "there was an issue to update game state to declined: $gameId", e)
                                 model.incomingChallenge.value = null
                             }
                     } else {
@@ -140,9 +131,8 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
 
 
     val playerName: String = playerMap[model.localPlayerId.value]?.name ?: "Unknown Player"
-    val filteredPlayers = players.filter { it.playerID != model.localPlayerId.value } //
+    val filteredPlayers = players.filter { it.playerID != model.localPlayerId.value } // It pekare
 
-   // Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
     Scaffold(  // _____
         topBar = {
             Box(
@@ -199,9 +189,6 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                                                 .addOnSuccessListener { documentReference ->
                                                     navController.navigate("MainScreen/${documentReference.id}")
                                                 }
-                                                .addOnFailureListener { e ->
-                                                    Log.e("LobbyScreen", "Error creating game", e)
-                                                }
                                         }
                                     }
                                 ) {
@@ -215,19 +202,6 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                                     onClick = {
                                         db.collection("players").document(player.playerID)
                                             .delete()
-                                            .addOnSuccessListener {
-                                                Log.d(
-                                                    "LobbyScreen",
-                                                    "Player ${player.name} deleted successfully."
-                                                )
-                                            }
-                                            .addOnFailureListener { e ->
-                                                Log.e(
-                                                    "LobbyScreen",
-                                                    "Error deleting player: ${player.name}",
-                                                    e
-                                                )
-                                            }
                                     }
                                 ) {
                                     Text("Delete")

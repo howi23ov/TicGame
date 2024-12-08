@@ -1,6 +1,6 @@
 package com.example.firebase
 
-data class Player(
+data class Player(   // data klass är för enkla strukturer
     var playerID: String = "",
     var name: String = "",
     var status: String = "",

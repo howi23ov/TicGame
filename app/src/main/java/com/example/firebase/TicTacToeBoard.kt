@@ -28,7 +28,7 @@ fun ConnectFourBoard(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(15.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val player = playerMap[game.currentPlayer]
@@ -37,7 +37,7 @@ fun ConnectFourBoard(
 
         Text(
             text = "Current Player is: $currentDiscColor ($currentPlayerName)",
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = 20.dp)
         )
 
         for (row in 0 until 6) {

@@ -19,31 +19,35 @@ import kotlinx.coroutines.flow.StateFlow
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()       // aktiverar en endge to edge layout. visar innhåll till alla kanter
+        enableEdgeToEdge()
 
-        setContent {            // detta är compose-innehåll som ska visas i appen
-            FirebaseTheme {     // ett temainställningspaket som definerar utseendet på appen
-                ConnectFourBoard() // huvudfunktion, sätter upp navigeringslogiken
+        setContent {
+            FirebaseTheme {
+                ConnectFourBoard()
             }
         }
     }
 }
 
-@Composable                                             // hanterar spelets struktur och navigering mellan skärmar
+@Composable
 fun ConnectFourBoard() {
-    val navController = rememberNavController()          // skapar och kommer ihåg en navigerinskontroller
+    val navController = rememberNavController()
     val gameModel = remember { GameModel() }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(gameModel) {
         gameModel.initGame()
     }
+
 
     NavHost(navController = navController, startDestination = "NewPlayerScreen") {
         composable("NewPlayerScreen") {
             NewPlayerScreen(navController, gameModel)
         }
         composable("MainScreen/{gameId}") { backStackEntry ->
-            val gameId = backStackEntry.arguments?.getString("gameId")
+            val arguments = backStackEntry.arguments
+            val gameId = if (arguments != null){
+                arguments.getString("gameId")
+            }else null
             MainScreen(navController, gameModel, gameId)
         }
         composable("LobbyScreen") {
@@ -51,6 +55,8 @@ fun ConnectFourBoard() {
         }
     }
 }
+
+
 
 @Composable
 fun <T> StateFlow<T>.collectAsStateWithLifecycle(): State<T> {
@@ -61,6 +67,7 @@ fun <T> StateFlow<T>.collectAsStateWithLifecycle(): State<T> {
     return state
 }
 
+/*
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
@@ -68,3 +75,4 @@ fun DefaultPreview() {
         ConnectFourBoard()
     }
 }
+*/
