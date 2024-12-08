@@ -31,7 +31,7 @@ fun NewPlayerScreen(navController: NavController, model: GameModel){
             .padding(60.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    ) { 
+    ) {
         Text("Enter Your name please!")
 
         OutlinedTextField(
