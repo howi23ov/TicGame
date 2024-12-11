@@ -21,42 +21,41 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        setContent {
-            FirebaseTheme {
-                ConnectFourBoard()
+        setContent {            // compose-innehåll som visas i appen
+            FirebaseTheme {     // ett temainställningspaket som definerar utseendet på appen
+                ConnectFourBoard() // huvudfunktion, sätter upp navigeringslogiken
             }
         }
     }
 }
 
-@Composable
+@Composable         // hanterar spelets struktur och navigering
 fun ConnectFourBoard() {
-    val navController = rememberNavController()
-    val gameModel = remember { GameModel() }
+    val navController = rememberNavController() // håller reda på navigering
+    val gameModel = remember { GameModel() }       // skapar kommer ihåg instans av game model.
 
-    LaunchedEffect(gameModel) {
+    LaunchedEffect(Unit) {
         gameModel.initGame()
     }
 
 
+    //    navController = navController, kopplar en NavController till denna navHost
     NavHost(navController = navController, startDestination = "NewPlayerScreen") {
+
         composable("NewPlayerScreen") {
             NewPlayerScreen(navController, gameModel)
         }
-        composable("MainScreen/{gameId}") { backStackEntry ->
-            val arguments = backStackEntry.arguments
-            val gameId = if (arguments != null){
-                arguments.getString("gameId")
-            }else null
+
+        composable("MainScreen/{gameId}") { navigationDestination ->
+            val gameId = navigationDestination.arguments?.getString("gameId")
             MainScreen(navController, gameModel, gameId)
         }
+
         composable("LobbyScreen") {
             LobbyScreen(navController, gameModel)
         }
     }
 }
-
-
 
 @Composable
 fun <T> StateFlow<T>.collectAsStateWithLifecycle(): State<T> {

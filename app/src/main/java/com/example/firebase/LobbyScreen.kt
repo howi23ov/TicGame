@@ -40,12 +40,12 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
         if (currentPlayerId != null) {
             db.collection("games")
                 .whereEqualTo("player1Id", currentPlayerId)
-                .addSnapshotListener { value, error ->
-                    if (error == null && value != null) {
-                        for (assignEachDocuments in value.documents) {
-                            val game = assignEachDocuments.toObject(Game::class.java)
+                .addSnapshotListener { docMatch, error ->
+                    if (error == null && docMatch != null) {
+                        for (newChallengeGame in docMatch.documents) {
+                            val game = newChallengeGame.toObject(Game::class.java)
                             if (game?.gameState == "declined") {
-                                db.collection("games").document(assignEachDocuments.id).delete()
+                                db.collection("games").document(newChallengeGame.id).delete()
                                 navController.navigate("LobbyScreen")
                             }
                         }
@@ -64,8 +64,8 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
     }
 
 
-    val players by playerList.collectAsStateWithLifecycle() // conver to stata
-    val challenge = model.incomingChallenge.value
+    val players by playerList.collectAsStateWithLifecycle()
+    val challengeGame = model.incomingChallenge.value
 
     val playerMap by model.playerMap.collectAsStateWithLifecycle()
     val challengersId = model.incomingChallenge.value?.player1Id
@@ -82,21 +82,20 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
         challengersName = "No Challenge"
     }
 
-
-    if (challenge != null) {
+    if (challengeGame != null) {
         AlertDialog(
             onDismissRequest = { model.incomingChallenge.value = null },
             title = { Text("You have been challenged!") },
             text = { Text("Player ${challengersName} has challenged you to a game.") },
             confirmButton = {
                 Button(onClick = {
-                    db.collection("games").document(challenge.gameId).update(
+                    db.collection("games").document(challengeGame.gameId).update(
                         mapOf(
                             "gameState" to "pending",
-                            "currentPlayer" to challenge.player1Id
+                            "currentPlayer" to challengeGame.player1Id
                         )
                     ).addOnSuccessListener {
-                        navController.navigate("MainScreen/${challenge.gameId}")
+                        navController.navigate("MainScreen/${challengeGame.gameId}")
                         model.incomingChallenge.value = null
                     }
                 }) {
@@ -105,13 +104,13 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
             },
             dismissButton = {
                 Button(onClick = {
-                    val gameId = challenge.gameId
+                    val gameId = challengeGame.gameId
                     if (!gameId.isNullOrEmpty()) {
                         db.collection("games").document(gameId).update("gameState", "declined")
-                            .addOnSuccessListener {
+                            .addOnSuccessListener { // körs när uppdateringen till firestore lyckades
                                 model.incomingChallenge.value = null
                             }
-                            .addOnFailureListener { e ->
+                            .addOnFailureListener {
                                 model.incomingChallenge.value = null
                             }
                     } else {
@@ -131,7 +130,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
 
 
     val playerName: String = playerMap[model.localPlayerId.value]?.name ?: "Unknown Player"
-    val filteredPlayers = players.filter { it.playerID != model.localPlayerId.value } // It pekare
+    val filteredPlayers = players.filter { it.playerID != model.localPlayerId.value }
 
     Scaffold(  // _____
         topBar = {
@@ -162,7 +161,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                     modifier = Modifier.padding(22.dp)
                 )
             }
-        } else {  // ta b
+        } else {
             LazyColumn(modifier = Modifier.padding(innerPadding)) {
                 items(filteredPlayers) { player ->
                     ListItem(
@@ -173,7 +172,7 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
                             Text("Status: ${player.status}")
                         },
                         trailingContent = {
-                            Row { // är för att lägga till flere knappar
+                            Row {
                                 Button(
                                     onClick = {
                                         val currentPlayerId = model.localPlayerId.value
@@ -186,8 +185,8 @@ fun LobbyScreen(navController: NavHostController, model: GameModel) {
 
                                             db.collection("games")
                                                 .add(newGame)
-                                                .addOnSuccessListener { documentReference ->
-                                                    navController.navigate("MainScreen/${documentReference.id}")
+                                                .addOnSuccessListener { forwardNewGame ->
+                                                    navController.navigate("MainScreen/${forwardNewGame.id}") // detta är argumentet forwardGameId som ersätter platsmärkaren gameId i rutten "MainScreen/gameId
                                                 }
                                         }
                                     }

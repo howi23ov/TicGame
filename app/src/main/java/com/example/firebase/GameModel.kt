@@ -6,6 +6,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 
+// Alt + vänster pil
 
 class GameModel: ViewModel() {
     val db = Firebase.firestore
@@ -30,9 +31,13 @@ class GameModel: ViewModel() {
                     playerMap.value = updatedMap
                 }
             }
-
-
-
+        /* firestore
+        {
+        "name": "Wille,
+        "status": "online",
+       }
+player objekt blir player(name = "wille", status = "online")
+         */
         db.collection("games")
             .addSnapshotListener { value, error ->
                 if (error != null) {
@@ -55,13 +60,13 @@ class GameModel: ViewModel() {
             Firebase.firestore.collection("games")
                 .whereEqualTo("player2Id", currentPlayerId)
                 .whereEqualTo("gameState", "pending")
-                .addSnapshotListener { snapshot, error ->
-                    if (error == null && snapshot != null) {
-                        for (doc in snapshot.documents) {
-                            val game = doc.toObject(Game::class.java)
+                .addSnapshotListener { player2IdMatchCurrentPlayerId, error ->
+                    if (error == null && player2IdMatchCurrentPlayerId != null) {
+                        for (newChallengeDoc in player2IdMatchCurrentPlayerId.documents) {
+                            val game = newChallengeDoc.toObject(Game::class.java)
                             if (game != null && game.gameState == "pending") {
-                                incomingChallenge.value = game.copy(gameId = doc.id)
-                                break
+                                incomingChallenge.value = game.copy(gameId = newChallengeDoc.id)
+                                break                         
                             }
                         }
                     }

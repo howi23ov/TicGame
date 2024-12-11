@@ -50,7 +50,7 @@ fun NewPlayerScreen(navController: NavController, model: GameModel){
                     model.db.collection("players").document(newPlayerId).set(newPlayer)
                         .addOnSuccessListener {
                             model.localPlayerId.value = newPlayerId
-                            navController.navigate("LobbyScreen")
+                            navController.navigate("LobbyScreen") // navcontroller styr vilken skärm som ska visas baserat på navigeringanrop (navigate)+
                         }
                 }
             }

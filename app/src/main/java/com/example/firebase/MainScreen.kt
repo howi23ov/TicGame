@@ -16,33 +16,34 @@ import com.google.firebase.firestore.firestore
 @Composable
 fun MainScreen(navController: NavController, model: GameModel, gameId: String?) {
     val db = Firebase.firestore
-    val gameState = remember { mutableStateOf<Game?>(null) }
+    val currentGame = remember { mutableStateOf<Game?>(null) }
     val winnerOfGame = remember { mutableStateOf<String?>(null) }
-    val game = gameState.value
+    val onGoingGame = currentGame.value
 
 
     LaunchedEffect(gameId) {
         if (gameId != null) {
-            db.collection("games").document(gameId)
-                .addSnapshotListener { snapshot, error ->
+            db.collection("games")
+                .document(gameId)
+                .addSnapshotListener { listenCurrentGame, error ->
                     if (error != null) {
                         println("Error fetching game: ${error.message}")
                         return@addSnapshotListener
                     }
 
-                    if (snapshot != null && snapshot.exists()) {
-                        val gameSnap = snapshot.toObject(Game::class.java)
-                        gameState.value = gameSnap
+                    if (listenCurrentGame != null && listenCurrentGame.exists()) {
+                        val currentGameToObject = listenCurrentGame.toObject(Game::class.java)
+                        currentGame.value = currentGameToObject
 
-                        if (gameSnap != null) {
-                            when (gameSnap.gameState) {
+                        if (currentGameToObject != null) {
+                            when (currentGameToObject.gameState) {
                                 "cancelled" -> {
                                     println("game was cancelled.")
                                     model.incomingChallenge.value = null
                                     navController.navigate("LobbyScreen")
                                 }
                                 "finished" -> {
-                                    winnerOfGame.value = gameSnap.winner
+                                    winnerOfGame.value = currentGameToObject.winner
                                     model.incomingChallenge.value = null
                                 }
                                 "tie" -> {
@@ -61,7 +62,7 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
     }
 
 
-    if (game != null && game.gameState == "pending" && gameId != null) {
+    if (onGoingGame != null && onGoingGame.gameState == "pending" && gameId != null) {
         val currentPlayerId = model.localPlayerId.value
         if (currentPlayerId != null) {
             AlertDialog(
@@ -71,7 +72,7 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
                 confirmButton = {
                     Button(onClick = {
                         val readyField =
-                            if (currentPlayerId == game.player1Id) "player1ReadyOrNot" else "player2ReadyOrNot"
+                            if (currentPlayerId == onGoingGame.player1Id) "player1ReadyOrNot" else "player2ReadyOrNot"
                         db.collection("games").document(gameId).update(readyField, true)
                     }) {
                         Text("i am Ready")
@@ -92,22 +93,23 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
     }
 
 
-    LaunchedEffect(game) {
-        if (game != null && game.player1ReadyOrNot && game.player2ReadyOrNot && game.gameState == "pending") {
+    LaunchedEffect(onGoingGame) {
+        if (onGoingGame != null && onGoingGame.player1ReadyOrNot && onGoingGame.player2ReadyOrNot && onGoingGame.gameState == "pending") {
             db.collection("games").document(gameId!!).update("gameState", "ongoing")
         }
     }
 
     val playerMap by model.playerMap.collectAsStateWithLifecycle()
 
-    if (game != null && game.gameState == "ongoing" && gameId != null) {
+
+    if (onGoingGame != null && onGoingGame.gameState == "ongoing" && gameId != null) {
         ConnectFourBoard(
-            game = game,
+            game = onGoingGame,
             playerMap = playerMap,
             onTileClick = { col ->
                 val rows = 6
                 val columns = 7
-                val board = game.gameBoard.toMutableList()
+                val board = onGoingGame.gameBoard.toMutableList()
 
                 /*
                0  1  2  3  4  5  6
@@ -131,11 +133,11 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
                     row--
                 }
 
-                if (findFirstFreeIndexInColumn != null && game.currentPlayer == model.localPlayerId.value) {
-                    board[findFirstFreeIndexInColumn] = if (game.currentPlayer == game.player1Id) 1 else 2
+                if (findFirstFreeIndexInColumn != null && onGoingGame.currentPlayer == model.localPlayerId.value) {
+                    board[findFirstFreeIndexInColumn] = if (onGoingGame.currentPlayer == onGoingGame.player1Id) 1 else 2
 
                     val nextPlayer =
-                        if (game.currentPlayer == game.player1Id) game.player2Id else game.player1Id
+                        if (onGoingGame.currentPlayer == onGoingGame.player1Id) onGoingGame.player2Id else onGoingGame.player1Id
 
                     db.collection("games").document(gameId).update(
                         mapOf(
@@ -147,9 +149,9 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
                     val winner = checkWinner(board)
                     if (winner != null) {
                         val winnerName = if (winner == 1) {
-                            playerMap[game.player1Id]?.name ?: "Unknown player"
+                            playerMap[onGoingGame.player1Id]?.name ?: "Unknown player"
                         } else {
-                            playerMap[game.player2Id]?.name ?: "Unknown player"
+                            playerMap[onGoingGame.player2Id]?.name ?: "Unknown player"
                         }
 
                         db.collection("games").document(gameId).update(
@@ -191,7 +193,7 @@ fun MainScreen(navController: NavController, model: GameModel, gameId: String?) 
         )
     }
 
-    if (game == null) {
+    if (onGoingGame == null) {
         Text("Loading game...")
     }
 }
